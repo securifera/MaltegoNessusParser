@@ -14,7 +14,8 @@ NESSUSSCANPROP = "nessusscan"
 NESSUSSCANPROPDIS = "Nessus Scan"
 NESSUSSCANPATHPROP = "nessusscanpath" #TODO update this
 NESSUSSCANPATHPROPDIS = "Nessus Scan Path"
-badXML = [("'",'&apos;'),("<","&lt;"),(">","&gt;"),("&","&amp;"),("\"","&quot;")]
+#badXML = [("'",'&apos;'),("<","&lt;"),(">","&gt;"),("&","&amp;"),("\"","&quot;")]
+badXML = [("<","("),(">",")")]
 STATMODE = "stat"
 GATHERPLUGINMODE = "gather_plugin"
 IPENTITYMODE = "ip_entity"
@@ -206,7 +207,11 @@ class DialogPrompt(tk.Toplevel):
 		
 		self.minsize(300, 50)
 		self.title(title)
-		self.iconbitmap('logo_icon_16x16.ico')
+		try:
+			#having trouble with icons on linux so just fail gracefully
+			self.iconbitmap('logo_icon_16x16.ico')
+		except:
+			pass
 
 	def on_ok(self, event=None):
 		self.destroy()
@@ -222,8 +227,6 @@ class PluginSelector(object):
 
 		self.master = master	
 		self.master.attributes('-topmost', True)
-		self.title("Plugin Selector")
-		self.iconbitmap('logo_icon_16x16.ico')
 		self.createwidgets(listcontents)
 				
 	def createwidgets(self, listcontent=[]):
@@ -370,7 +373,11 @@ def getSelectedPlugins():
 
 	root = tk.Tk()
 	app = PluginSelector(root, list(uniquePlugins))
-	#app.master.title(
+	app.master.title("Plugin Selector")
+	try:
+		app.master.iconbitmap('logo_icon_16x16.ico')
+	except:
+		pass
 	data = app.getSelected()
 	root.mainloop()
 	
@@ -687,6 +694,7 @@ def handlePolicy(PolicyElement, mode=STATMODE):
 def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None):
 	global pluginIncludeList
 	global uniquePlugins
+	global badXML
 	
 	if mode == GATHERPLUGINMODE:
 		pluginId = ReportItemElement.get("pluginID")
@@ -699,7 +707,7 @@ def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None):
 		data = ""
 		for child in ReportItemElement:
 			if child.tag == "plugin_output":
-				data = child.text
+				data = sanitize(child.text, badXML)
 				
 		if pluginId is not None:
 			if pluginId == "55472":
@@ -726,8 +734,7 @@ def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None):
 				data = ""
 				for child in ReportItemElement:
 					if child.tag == "plugin_output":
-						data = child.text
-				#data = sanitize(data, badXML)
+						data = sanitize(child.text, badXML)
 				
 				#plugin parsing
 				if pluginId == "11219": #Nessus SYN scanner
