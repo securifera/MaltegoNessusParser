@@ -28,6 +28,18 @@ Install
 
     -   Confirm all entities, transforms, and other items are checked
 
+-   Install prerequisites
+
+    -   Install Python (Only tested on 2.7 currently)
+
+    -   Install python ipaddress libraries
+
+        -   pip install ipaddress
+
+    -   Install python Tkinter libraries (not necessary on Windows I think)
+
+        -   apt-get install python-tk
+
  
 
 Usage
