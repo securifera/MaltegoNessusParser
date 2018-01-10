@@ -15,7 +15,7 @@ NESSUSSCANPROPDIS = "Nessus Scan"
 NESSUSSCANPATHPROP = "nessusscanpath" #TODO update this
 NESSUSSCANPATHPROPDIS = "Nessus Scan Path"
 #badXML = [("'",'&apos;'),("<","&lt;"),(">","&gt;"),("&","&amp;"),("\"","&quot;")]
-badXML = [("<","("),(">",")")]
+badXML = [("<","("),(">",")"),("&","%")]
 STATMODE = "stat"
 GATHERPLUGINMODE = "gather_plugin"
 IPENTITYMODE = "ip_entity"
@@ -387,16 +387,18 @@ def getSelectedPlugins():
 #Nessus Plugin parsers
 ########################################
 
-def handleGenericPlugin(pluginId, pluginName, port, data):
+def handleGenericPlugin(name, pluginId, pluginName, port, data):
 	global pluginInfo
 	
-	if (pluginId,pluginName) in pluginInfo:
-		pluginInfo[(pluginId,pluginName)][0].append(port)
-		pluginInfo[(pluginId,pluginName)][1].append(data)
+	fullName = pluginName+" ("+name+")"
+	
+	if (pluginId,fullName) in pluginInfo:
+		pluginInfo[(pluginId,fullName)][0].append(port)
+		pluginInfo[(pluginId,fullName)][1].append(data)
 	else:
-		pluginInfo[(pluginId,pluginName)] = ([],[])
-		pluginInfo[(pluginId,pluginName)][0].append(port)
-		pluginInfo[(pluginId,pluginName)][1].append(data)
+		pluginInfo[(pluginId,fullName)] = ([],[])
+		pluginInfo[(pluginId,fullName)][0].append(port)
+		pluginInfo[(pluginId,fullName)][1].append(data)
 
 def parsePlugin55472(value): #Device Hostname
 	hostname = ""
@@ -427,11 +429,13 @@ def parsePlugin12053(value): #Host Fully Qualified Domain Name (FQDN) Resolution
 	
 	return hostname
 
-def parsePlugin10719(value): #MSSql
-	dataArr = data.split('|')
+def parsePlugin10719(data, serviceInst): #MSSql
+	dataArr = data.split('\n')
 	if len(dataArr) > 2:
-		type = dataArr[1].split(':')[1].strip()
-		serviceInst.setBanner(type)
+		lineSplit = dataArr[1].split(':')
+		if len(lineSplit) > 1:
+			type = lineSplit[1].strip()
+			serviceInst.setBanner(type)
 		
 		#Add data
 		data = dataArr[2:]
@@ -472,10 +476,12 @@ def parsePlugin25203(value): #Enumerate IPv4 Interfaces via SSH
 	return ipAddrs
 	
 def parsePlugin63061(data, serviceInst): #VMWare VCenter
-	websrvTypeArr = data.split('|')
+	websrvTypeArr = data.split('\n')
 	if len(websrvTypeArr) > 2:
-		type = websrvTypeArr[2].split(':')[1].strip()
-		serviceInst.setBanner(type)
+		lineSplit = websrvTypeArr[2].split(':')
+		if len(lineSplit) > 1:
+			type = lineSplit[1].strip()
+			serviceInst.setBanner(type)
 		
 		#Add data
 		data = websrvTypeArr[2:]
@@ -483,10 +489,12 @@ def parsePlugin63061(data, serviceInst): #VMWare VCenter
 	return
 	
 def parsePlugin57396(data, serviceInst): #VMWare VSphere
-	websrvTypeArr = data.split('|')
+	websrvTypeArr = data.split('\n')
 	if len(websrvTypeArr) > 2:
-		type = websrvTypeArr[1].split(':')[1].strip()
-		serviceInst.setBanner(type)
+		lineSplit = websrvTypeArr[2].split(':')
+		if len(lineSplit) > 1:
+			type = lineSplit[1].strip()
+			serviceInst.setBanner(type)
 		
 		#Add data
 		data = websrvTypeArr[2:]
@@ -494,19 +502,19 @@ def parsePlugin57396(data, serviceInst): #VMWare VSphere
 	return
 	
 def parsePlugin10107(data, serviceInst): #HTTP Server Type and Version
-	websrvTypeArr = data.split('||')
-	if len(websrvTypeArr) > 2:
-		type = websrvTypeArr[1].split('|')[0]
+	websrvTypeArr = data.split('\n')
+	if len(websrvTypeArr) > 3:
+		type = websrvTypeArr[2]#.split(' ') #TODO double check this
 		serviceInst.setBanner(type)
 		
 		#Add data
-		data = websrvTypeArr[2:]
+		data = websrvTypeArr[3:]
 		serviceInst.note += "\n".join(data)
 	return
 	
 def parsePlugin10144(data, serviceInst): #Microsoft SQL Server
 
-	dataArr = data.split('|')
+	dataArr = data.split('\n')
 	if len(dataArr) > 3:
 		type = "Microsoft SQL Server:"
 		type += dataArr[1].replace("The remote SQL Server version is", "").strip()		
@@ -524,7 +532,7 @@ def parsePlugin10263(data, serviceInst): #SMTP Server Detection
 	return
 	
 def parsePlugin24260(data, serviceInst): #HTTP Server Type and Version
-	webDataArr = data.split('|')
+	webDataArr = data.split('\n')
 	for line in webDataArr:
 		if "Server:" in line:
 			lineArr = line.split(":")
@@ -539,23 +547,23 @@ def parsePlugin24260(data, serviceInst): #HTTP Server Type and Version
 				serviceInst.addCustomProperty(prop)
 			
 	#Add data
-	serviceInst.note += data.replace('|', '\n') + '\n'
+	serviceInst.note += data + '\n'
 	
 	return
 	
 def parsePlugin10267(data, serviceInst): #SSH Server Type and Version
-	dataArr = data.split('|')
+	dataArr = data.split('\n')
 	if len(dataArr) > 1:
-		version = dataArr[1].split(':')[1].strip()
-		serviceInst.setBanner(version)
+		lineSplit = dataArr[1].split(':')
+		if len(lineSplit) > 1:
+			version = lineSplit[1].strip()
+			serviceInst.setBanner(version)
 	return
 	
 def parseGenericSSH(data, serviceInst): #SSH Other
 	
 	if serviceInst.banner == '':
 		serviceInst.setBanner('SSH')
-		
-	serviceInst.note += data.replace('|', '\n')
 	
 def parseGenericServicePlugin(data, serviceInst): #Generic Service Plugin
 			
@@ -691,7 +699,7 @@ def handlePolicy(PolicyElement, mode=STATMODE):
 #Nessus Scan functions (Report)
 ########################################
 
-def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None):
+def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None, name=""):
 	global pluginIncludeList
 	global uniquePlugins
 	global badXML
@@ -895,7 +903,7 @@ def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None):
 					for account in retAccounts:
 						userAccounts.append(Alias(account,la=True))
 				else: #no special handler for plugin
-					handleGenericPlugin(pluginId, pluginName, port, data)
+					handleGenericPlugin(name, pluginId, pluginName, port, data)
 
 def handleReportHost(ReportHostElement, mode=STATMODE, ipList=[]):
 	global uniqueHosts
@@ -931,7 +939,7 @@ def handleReportHost(ReportHostElement, mode=STATMODE, ipList=[]):
 			if name in ipList:
 				for child in ReportHostElement:
 					if child.tag == "ReportItem":
-						handleReportItem(child, mode, None)
+						handleReportItem(child, mode, None, name)
 		
 		#plugin parsing mode
 		elif mode == GATHERPLUGINMODE:
@@ -957,14 +965,14 @@ def handleRoot(root, mode=STATMODE, ipList=[]):
 
 def parseNessus(nessusFiles=[], mode=STATMODE, ipList=[]):
 	for nessusFile in nessusFiles:
-		try:
-			tree = ET.parse(nessusFile)
-			root = tree.getroot()
+		#try:
+		tree = ET.parse(nessusFile)
+		root = tree.getroot()
 
-			if root.tag == "NessusClientData_v2":
-				handleRoot(root, mode, ipList)
-		except Exception as ex:
-			print ex
+		if root.tag == "NessusClientData_v2":
+			handleRoot(root, mode, ipList)
+		#except Exception as ex:
+		#	print nessusFile, mode, ipList, ex
 
 ########################################
 #Maltego Entity Handler functions
@@ -976,8 +984,6 @@ def handleIpEntity(entityValue="", properties=""):
 	global userAccounts
 	global pluginIncludeList
 	
-	includeList = []
-	ip = ""
 	fileStr = None
 	host = ""
 	nessusFiles = []
@@ -1005,14 +1011,21 @@ def handleIpEntity(entityValue="", properties=""):
 	#prompt user for nessus files if not already specified
 	fileStr, nessusFiles = getNessusScanFiles(fileStr)
 	
+	#prompt user for user for plugin selections
+	if len(pluginIncludeList) < 1:
+		parseNessus(nessusFiles, GATHERPLUGINMODE)
+		data = getSelectedPlugins()
+		for plugin in data:
+			pluginIncludeList.append(plugin[0])
+	
 	parseNessus(nessusFiles, PLUGINENTITYMODE, [entityValue])
 
 	#start creation of Maltego message
 	MaltegoMessage = MaltegoTransform()
 	
 	#ensure properties of calling entity updated
-	#ent = MaltegoMessage.addEntity("maltego.IPv4Address", entityValue)
-	#TODO update props
+	ent = MaltegoMessage.addEntity("maltego.IPv4Address", entityValue)
+	ent.addProperty(fieldName="includelist",displayName="IncludeList",value=str(pluginIncludeList))
 	
 	#handle all plugins
 	for key,value in pluginInfo.iteritems():
@@ -1023,8 +1036,7 @@ def handleIpEntity(entityValue="", properties=""):
 		portStr = str(value[0])
 		
 		if len(totalstr) > 2:
-			#numEntities = numEntities + 1
-			ent = MaltegoMessage.addEntity("securifera.NessusPlugin", key[1]+" ("+host+")")
+			ent = MaltegoMessage.addEntity("securifera.NessusPlugin", key[1])
 			ent.addProperty(fieldName="pluginid",displayName="PluginID",value=key[0])
 			ent.addProperty(fieldName="ports",displayName="Ports",value=portStr)
 			ent.setNote(totalstr)
