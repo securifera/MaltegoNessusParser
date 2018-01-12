@@ -78,13 +78,13 @@ class IPv4Address(MaltegoEntity):
 		ent = MaltegoEntity.addEntity(self, maltegoMsg)
 		if self.hostname != '':
 			ent.addProperty(fieldName="fqdn",displayName="DNSName",value=self.hostname)
-		return ent		
+		return ent
 
 class Port(MaltegoEntity):
 	
 	def __init__(self, port):
 		MaltegoEntity.__init__(self, "maltego.Port", str(port))
-		self.port = port	
+		self.port = port
 						
 	def addEntity(self, maltegoMsg):
 		ent = MaltegoEntity.addEntity(self, maltegoMsg)
@@ -112,7 +112,7 @@ class Service(Port):
 			self.entDesc = self.description
 		
 		#Create the base entity
-		ent = Port.addEntity(self, maltegoMsg)	
+		ent = Port.addEntity(self, maltegoMsg)
 		if self.banner != '':
 			ent.addProperty(fieldName="banner.text",displayName="Service banner",value=self.banner)
 			ent.addProperty(fieldName="properties.service",displayName="Service",value=self.service)
@@ -225,7 +225,7 @@ class DialogPrompt(tk.Toplevel):
 class PluginSelector(object):
 	def __init__(self, master=None, listcontents=[]):
 
-		self.master = master	
+		self.master = master
 		self.master.attributes('-topmost', True)
 		self.createwidgets(listcontents)
 				
@@ -336,7 +336,7 @@ class PluginSelector(object):
 		for i in self.listbox.curselection():
 			tempItems = self.listbox2.get(0, tk.END)
 			if self.listbox.get(i) not in tempItems:
-				self.listbox2.insert(tk.END, self.listbox.get(i))				
+				self.listbox2.insert(tk.END, self.listbox.get(i))
 		self.label2.config(text=str(len(self.listbox2.get(0, tk.END))))
 		
 	def removeButtonCallback(self):
@@ -610,7 +610,7 @@ def parsePlugin35371(value, serviceInst): #DNS banner and hostname
 			part = valParts[3]
 			hostnameParts = part.split(".")
 			if len(hostnameParts) > 0:
-				hostname = hostnameParts[0]	
+				hostname = hostnameParts[0]
 				return hostname
 	else:
 		if serviceInst.banner == '':
@@ -725,7 +725,7 @@ def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None, name="")
 			elif pluginId == "35371":
 				hostname = parsePlugin35371(data, None)
 			elif pluginId == "11936":
-				parsePlugin11936(data, entityInst)						
+				parsePlugin11936(data, entityInst)
 			elif pluginId == "54615":
 				parsePlugin54615(data, entityInst)
 				
@@ -784,7 +784,7 @@ def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None, name="")
 						serviceMap[port] = serviceInst
 					parsePlugin10267(data, serviceInst)
 					
-				elif pluginId == "10144": #Microsoft SQL Server 
+				elif pluginId == "10144": #Microsoft SQL Server
 				
 					#See if service exists. if it doesn't, create it
 					if port in serviceMap:
@@ -792,7 +792,7 @@ def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None, name="")
 					else:
 						serviceInst = Service(port, "")
 						serviceMap[port] = serviceInst
-					parsePlugin10144(data, serviceInst)	
+					parsePlugin10144(data, serviceInst)
 					
 				elif pluginId == "10263": #SMTP Server Detection
 				
@@ -825,7 +825,7 @@ def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None, name="")
 						serviceInst = Service(port, "")
 						serviceMap[port] = serviceInst
 					parsePlugin57396(data, serviceInst)
-																	
+
 				elif pluginId == "10719": #MSSQL Banner
 				
 					#See if service exists. if it doesn't, create it
@@ -834,7 +834,7 @@ def handleReportItem(ReportItemElement, mode=STATMODE, entityInst=None, name="")
 					else:
 						serviceInst = Service(port, "")
 						serviceMap[port] = serviceInst
-					parsePlugin10719(data, serviceInst)	
+					parsePlugin10719(data, serviceInst)
 					
 				elif pluginId == "24260": #HTTP Information
 				
@@ -1108,7 +1108,7 @@ def handleNetblockEntity(entityValue="", properties=""):
 				for numStr in ipQuad2:
 					num = int(numStr)
 					if num < 0 or num > 255:
-						raise Exception("IP Address provided is not in proper format: " + endIp )				
+						raise Exception("IP Address provided is not in proper format: " + endIp )
 						
 				for q1 in range( int(ipQuad1[0]), int(ipQuad2[0]) + 1):
 					for q2 in range( int(ipQuad1[1]), int(ipQuad2[1]) + 1):
@@ -1196,8 +1196,8 @@ def handleNessusScanEntity(entityValue="", properties=""):
 	
 	xmlStr = MaltegoMessage.returnOutput()
 			
-	return xmlStr	
-			
+	return xmlStr
+
 def nessusScanStat(filePaths=[]):
 	global uniqueHosts
 	global uniquePlugins
