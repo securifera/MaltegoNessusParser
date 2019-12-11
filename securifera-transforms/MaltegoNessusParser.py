@@ -1029,7 +1029,7 @@ def handleIpEntity(entityValue="", properties=""):
 	ent.addProperty(fieldName="includelist",displayName="IncludeList",value=str(pluginIncludeList))
 	
 	#handle all plugins
-	for key,value in pluginInfo.iteritems():
+	for key,value in pluginInfo.items():
 		
 		totalstr = ""
 		for val in value[1]:
@@ -1043,7 +1043,7 @@ def handleIpEntity(entityValue="", properties=""):
 			ent.setNote(totalstr)
 			
 	#handle all open ports
-	for port, service_inst in serviceMap.iteritems():
+	for port, service_inst in serviceMap.items():
 		service_inst.addEntity(MaltegoMessage)
 		
 	#handle all accounts
@@ -1119,7 +1119,7 @@ def handleNetblockEntity(entityValue="", properties=""):
 												
 			
 		elif "/" in entityValue:
-			subnet = ipaddress.ip_network(unicode(entityValue))
+			subnet = ipaddress.ip_network(entityValue)
 			iprange = subnet.hosts()
 			for ipObj in iprange:
 				ipList.append(str(ipObj))
@@ -1174,7 +1174,7 @@ def handleNessusScanEntity(entityValue="", properties=""):
 	if len(pluginfilter) < 1:
 		parseNessus(nessusFiles, GATHERPLUGINMODE)
 		data = getSelectedPlugins()
-
+		pluginIncludeList.clear()
 		for plugin in data:
 			pluginIncludeList.append(plugin[0])
 	else:
