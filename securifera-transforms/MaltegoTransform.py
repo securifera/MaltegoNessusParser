@@ -75,14 +75,10 @@ class MaltegoEntity(object):
             self.displayInformation.append([dl,di])     
             
     def addProperty(self,fieldName=None,displayName=None,matchingRule=False,value=None):
-        if isinstance(value, unicode):
-            value = value.encode('utf-8')
         self.additionalFields.append([fieldName,displayName,matchingRule,value])
     
     def setIconURL(self,iU=None):
         if (iU is not None):
-            if isinstance(iU, unicode):
-                iU = iU.encode('utf-8')
             self.iconURL = iU
             
     def setLinkColor(self,color):
@@ -106,8 +102,6 @@ class MaltegoEntity(object):
     def returnEntity(self):
         r=''
         r+= "<Entity Type=\"" + str(self.entityType) + "\">"
-        if isinstance(self.value, unicode):
-            self.value = self.value.encode('utf-8')
         self.value = escape(self.value)
         #self.value = self.value.encode('utf-8')
         r+= "<Value>" + str(self.value) + "</Value>"
@@ -120,7 +114,7 @@ class MaltegoEntity(object):
         if (len(self.additionalFields) > 0):
             r+= "<AdditionalFields>"
             for i in range(len(self.additionalFields)):
-                if (str(self.additionalFields[i][2]) <> "strict"):
+                if (str(self.additionalFields[i][2]) != "strict"):
                     r+= "<Field Name=\"" + str(self.additionalFields[i][0]) + "\" DisplayName=\"" + str(self.additionalFields[i][1]) + "\">" + str(self.additionalFields[i][3]) + "</Field>"
                 else:
                     r+= "<Field MatchingRule=\"" + str(self.additionalFields[i][2]) + "\" Name=\"" + str(self.additionalFields[i][0]) + "\" DisplayName=\"" + str(self.additionalFields[i][1]) + "\">" + str(self.additionalFields[i][3]) + "</Field>"
@@ -177,23 +171,23 @@ class MaltegoTransform(object):
         return r
         
     def returnOutput(self):
-		r=''
-		r+= "<MaltegoMessage>"
-		r+= "<MaltegoTransformResponseMessage>"
+        r=''
+        r+= "<MaltegoMessage>"
+        r+= "<MaltegoTransformResponseMessage>"
 					
-		r+= "<Entities>"
-		for i in range(len(self.entities)):
-			r+=self.entities[i].returnEntity()
-		r+= "</Entities>"
+        r+= "<Entities>"
+        for i in range(len(self.entities)):
+            r+=self.entities[i].returnEntity()
+        r+= "</Entities>"
 					
-		r+= "<UIMessages>"
-		for i in range(len(self.UIMessages)):
-			r+= "<UIMessage MessageType=\"" + self.UIMessages[i][0] + "\">" + self.UIMessages[i][1] + "</UIMessage>"
-		r+= "</UIMessages>"
+        r+= "<UIMessages>"
+        for i in range(len(self.UIMessages)):
+            r+= "<UIMessage MessageType=\"" + self.UIMessages[i][0] + "\">" + self.UIMessages[i][1] + "</UIMessage>"
+        r+= "</UIMessages>"
 
-		r+= "</MaltegoTransformResponseMessage>"
-		r+= "</MaltegoMessage>"
-		return r
+        r+= "</MaltegoTransformResponseMessage>"
+        r+= "</MaltegoMessage>"
+        return r
         
 
 

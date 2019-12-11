@@ -1,9 +1,9 @@
 import ipaddress
 import xml.etree.ElementTree as ET
-from sets import Set
+# from sets import Set
 from MaltegoTransform import *
 import time
-import Tkinter as tk
+import tkinter as tk
 import glob
 import os
 
@@ -24,11 +24,11 @@ PLUGINENTITYMODE = "plugin_entity"
 ########################################
 #Global variables
 ########################################
-uniquePluginIds = Set()
-uniqueHosts = Set()
+uniquePluginIds = set()
+uniqueHosts = set()
 allHosts = []
 parseMode = "stats"
-uniquePlugins = Set()
+uniquePlugins = set()
 defaultPluginFilter = "10908,95928,10860,10399,72684,10902,10107,24260,22964,11219,34252,10267,21186,10092,20285,31411,10144,22073,26024,17975,11153,11154,20301,63061,57396,10263,10144,35371,10719,11002"
 pluginIncludeList = []
 
@@ -141,7 +141,8 @@ def sanitize(aLine, tupleList=[]):
 		return aLine
 	
 	for tup in tupleList:
-		aLine = aLine.replace(tup[0], tup[1])
+		if aLine is not None:
+			aLine = aLine.replace(tup[0], tup[1])
 		
 	return aLine
 
@@ -160,9 +161,9 @@ def getNessusScanFiles(fileStr=None):
 		filePaths = [fileStr]
 	
 	if parseMode == STATMODE:
-		print "Number of Nessus scans:", len(filePaths)
+		print("Number of Nessus scans:", len(filePaths))
 		for file in filePaths:
-			print file
+			print(file)
 		
 	return fileStr, filePaths
 
@@ -972,7 +973,7 @@ def parseNessus(nessusFiles=[], mode=STATMODE, ipList=[]):
 		if root.tag == "NessusClientData_v2":
 			handleRoot(root, mode, ipList)
 		#except Exception as ex:
-		#	print nessusFile, mode, ipList, ex
+		#	print(nessusFile, mode, ipList, ex)
 
 ########################################
 #Maltego Entity Handler functions
@@ -1123,8 +1124,8 @@ def handleNetblockEntity(entityValue="", properties=""):
 			for ipObj in iprange:
 				ipList.append(str(ipObj))
 				
-	except Exception, e:
-		print "[-] Unable to parse netblock format: " + str(e)
+	except Exception as ex:
+		print("[-] Unable to parse netblock format:", ex)
 		sys.exit(1)
 		
 	#start creation of Maltego message
@@ -1205,28 +1206,28 @@ def nessusScanStat(filePaths=[]):
 	parseNessus(filePaths, GATHERPLUGINMODE)
 	parseNessus(filePaths, STATMODE)
 	
-	print "Unique Plugins:", len(uniquePlugins)
-	print "Unique Hosts:", len(uniqueHosts)
+	print("Unique Plugins:", len(uniquePlugins))
+	print("Unique Hosts:", len(uniqueHosts))
 	
 def usage():
-	print "\nUsage:"
-	print "\tpython nessusParser.py stat ['dir or file path']"
-	print "\t  or"
-	print "\tpython nessusParser.py EntityValue PropName#PropValue[,PropName#PropValue...]"
+	print("\nUsage:")
+	print("\tpython nessusParser.py stat ['dir or file path']")
+	print("\t  or")
+	print("\tpython nessusParser.py EntityValue PropName#PropValue[,PropName#PropValue...]")
 
 def main():
 	
 	#parse input
-	#print len(sys.argv), sys.argv
+	#print(len(sys.argv), sys.argv)
 	if len(sys.argv) < 2:
-		print "Number of arguments is:", len(sys.argv), ". Expecting more"
-		#print sys.argv
+		print("Number of arguments is:", len(sys.argv), ". Expecting more")
+		#print(sys.argv)
 		usage()
 		sys.exit(1)
 		
 	#stat as first argument signals not running from Maltego context
 	if len(sys.argv) > 1 and "stat" == sys.argv[1]:
-		print "Stats on Nessus scan data"
+		print("Stats on Nessus scan data")
 		startTime = time.time()
 		if len(sys.argv) > 2:
 			fileStr = sys.argv[2]
@@ -1237,13 +1238,13 @@ def main():
 		
 		nessusScanStat(filePaths)
 		endTime = time.time()
-		print "Time elapsed:", endTime-startTime
+		print("Time elapsed:", endTime-startTime)
 		sys.exit(0)
 	
 	#Maltego context here
 	if len(sys.argv) < 3:
-		print "Number of arguments is:", len(sys.argv), ". Expecting more"
-		print sys.argv
+		print("Number of arguments is:", len(sys.argv), ". Expecting more")
+		print(sys.argv)
 		sys.exit(1)
 	
 	entityValue = sys.argv[1]
@@ -1258,11 +1259,11 @@ def main():
 	elif NESSUSSCANPROP in properties:
 		xmlStr = handleNessusScanEntity(entityValue, properties)
 	else:
-		print "Unknown calling entity:", entityValue, properties
+		print("Unknown calling entity:", entityValue, properties)
 		sys.exit(1)
 
 	#output xml
-	print xmlStr
+	print(xmlStr)
 	
 if __name__ == "__main__":
 	main()
